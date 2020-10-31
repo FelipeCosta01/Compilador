@@ -1,4 +1,8 @@
+package src;
+
 import java.awt.BorderLayout;
+
+
 import java.awt.EventQueue;
 import java.awt.FileDialog;
 
@@ -15,10 +19,15 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
 import java.awt.TextArea;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
+import java.util.Stack;
 import java.awt.ScrollPane;
 import java.awt.Color;
+import java.awt.Dimension;
+
 import javax.swing.UIManager;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -37,11 +46,21 @@ import javax.swing.JOptionPane;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import java.awt.SystemColor;
+
+
 
 public class windowcompiler extends JFrame {
 	Scanner ler = new Scanner(System.in);
 
+	Biblioteca biblioteca = new Biblioteca();
+
 	private JPanel contentPane;
+
+	tabelaModel tabelamodel = new tabelaModel();
+	private JTable infoTable;
 
 	/**
 	 * Launch the application.
@@ -59,17 +78,23 @@ public class windowcompiler extends JFrame {
 		});
 	}
 
-	/**
-	 * Create the frame.
-	 */
 	public windowcompiler() {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1171, 845);
+		setSize(1477, 845);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
+		setLocationRelativeTo(null);
 		contentPane.setLayout(null);
+		
+		JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(1164, 453, 287, 330);
+        contentPane.add(scrollPane);
+        infoTable = new JTable();
+        scrollPane.setViewportView(infoTable);
+        infoTable.setModel(tabelamodel);
+		
 
 		TextArea Entrada = new TextArea(); // Criando o campo entrada
 		Entrada.setBounds(10, 22, 1135, 379);
@@ -82,31 +107,49 @@ public class windowcompiler extends JFrame {
 		JButton btnAnalise = new JButton("Compilar"); // Criando botao Compilar
 		btnAnalise.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) { // evento de click no botao
+
 				
-				String[] quebra;
-				String[] quebraPlus;
-				int j=0;
-				File caminho = new File("D:/src.txt");
-				String receberTexto = Entrada.getText(); // criando a variavel que vai receber o conteudo do arquivo
-				FileWriter arquivo; // o arquivo que vai ser lido é a variavel arquivo
-				
+				Lexico lexico = new Lexico();
+				String receberTexto = Entrada.getText();
+				File caminho = new File("d:/src.txt");
+				FileWriter arquivo;
+				Stack<String> pilha = new Stack<String>();
+
 				try {
 					arquivo = new FileWriter(caminho); // variavel arquivo aponta pro caminho
 					arquivo.write(receberTexto); // pegando a variavel e colocando dentro do arquivo
 					arquivo.close(); // fechando o arquivo que esta em segundo
-					
-					quebra = receberTexto.split(" ");
-					
-					for(int i = 0; i < quebra.length; i++) {
-						if(!quebra[i].isEmpty()) {
-							quebraPlus[j] = quebra[i];
-							j++;
-						}
+
+					lexico.quebra(receberTexto);
+
+					while (!lexico.pilha.isEmpty()) {
+						pilha.push(lexico.pilha.pop());
 					}
+
+					
+
 				} catch (Exception exe) {
 					exe.printStackTrace(); // Mostrando o traço do erro
 				}
 
+				if(tabelamodel.getLines() > 0) {
+
+					tabelamodel.clearTable();
+                }
+				Stack<String> aux = pilha;
+				
+              while(!aux.isEmpty()) {
+            	  
+                    informacao i = new informacao();
+                    String string = aux.pop().toString();
+                    System.out.println(string);
+                    String splitString[] = string.split("#");
+                    i.setCodigo(splitString[0]);
+                    i.setTermo(splitString[1]);
+                    tabelamodel.addRow(i);
+                    
+                }
+                
 				Console.setText("Arquivo Processado!"); // inserindo mensagem no campo entrada
 
 			}
@@ -120,7 +163,6 @@ public class windowcompiler extends JFrame {
 			public void mouseClicked(MouseEvent e) { // evento de click no botao
 
 				JFileChooser fc = new JFileChooser(); // criando abertura da pasta pra selecionar arquivo
-				int returnVal = fc.showOpenDialog(null);
 				File selectedFile = fc.getSelectedFile();
 
 				try {
@@ -138,6 +180,9 @@ public class windowcompiler extends JFrame {
 		});
 		btnOpen.setBounds(10, 0, 89, 23);
 		contentPane.add(btnOpen);
+	
+	
+				
 
 	}
 }
